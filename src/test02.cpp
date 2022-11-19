@@ -5,70 +5,6 @@
 #include <string.h>
 #include "ElfParser.h"
 
-
-void printPhdrHeader(const Elf64_Phdr& header) {
-    printf("======== Elf64_Phdr start ========\n");
-    printf("    |- p_type   = %d\n", header.p_type);
-    printf("    |- p_flags  = %d\n", header.p_flags);
-    printf("    |- p_offset = %lu\n", header.p_offset);
-    printf("    |- p_vaddr  = %p\n", (void*)header.p_vaddr);
-    printf("    |- p_paddr  = %p\n", (void*)header.p_paddr);
-    printf("    |- p_filesz = %lu\n", header.p_filesz);
-    printf("    |- p_memsz  = %lu\n", header.p_memsz);
-    printf("    |- p_align  = %lu\n", header.p_align);
-    printf("======== Elf64_Phdr end ========\n");
-}
-
-using namespace std;
-
-size_t SectionNameStrSize = 0;
-const char* SectionNameStrTable = nullptr;
-
-void printStrTable(size_t strSize, char* strTable) {
-    printf("======== print string table begin ========\n");
-    printf(" string size: %lu\n", strSize);
-    printf(" string  addr: %p\n", strTable);
-    printf(" string items: ");
-    for (size_t strIdx = 0; strIdx < strSize; ++strIdx) {
-        if (*(strTable + strIdx) == 0) {
-            printf("\n  --> ");
-        } else {
-            printf("%c", *(strTable + strIdx));
-        }
-    }
-    printf("\n");
-    printf("======== print string table end ========\n");
-}
-
-void retrievePhdr(size_t phdrNum, ElfW(Phdr)* phdrs, FILE* fp) {
-    for (size_t phdrIdx = 0; phdrIdx < phdrNum; ++phdrIdx) {
-        ElfW(Phdr)& phdr = phdrs[phdrIdx];
-        printf("==> header phdrIdx: %lu, type: 0x%X\n", phdrIdx, phdr.p_type);
-
-        ElfW(Dyn*) dyns = new ElfW(Dyn)[phdr.p_filesz];
-        fseek(fp, phdr.p_offset, SEEK_SET);
-        fread(dyns, phdr.p_filesz, sizeof(char), fp);
-
-        size_t strSize = 285;
-        char* strTab = nullptr;
-        for (ElfW(Dyn*) dyn = dyns; dyn->d_tag != DT_NULL; ++dyn) {
-            if (dyn->d_tag == DT_STRSZ) {
-                strSize = dyn->d_un.d_val;
-                printf("      |--> 1 string table size: %lu\n", strSize);
-            } else if (dyn->d_tag == DT_STRTAB) {
-                printf("      |--> 2 string table size: %lu\n", strSize);
-                // strTab = (char*)dyn->d_un.d_ptr;
-                strTab = new char[strSize];
-                fseek(fp, dyn->d_un.d_ptr, SEEK_SET);
-                fread(strTab, strSize, sizeof(char), fp);
-                printStrTable(strSize, strTab);
-                delete[] strTab;
-                strTab = nullptr;
-            }
-        }
-    }
-}
-
 extern "C" {
     typedef void (*StubFunctiong)();
     void method01();
@@ -157,11 +93,6 @@ int main() {
 
     const ElfW(Phdr)* phdrs = handler.getPhdrs();
     const ElfW(Shdr)* shdrs = handler.getShdrs();
-
-    // read section names string table
-    
-    SectionNameStrSize = handler.getStrTableSize();;
-    SectionNameStrTable = handler.getStrTable();
 
     const ElfW(Ehdr)* pehdr = &ehdr;
 
