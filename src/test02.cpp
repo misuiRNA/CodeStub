@@ -3,7 +3,7 @@
 #include <vector>
 #include <unistd.h>
 #include <string.h>
-#include "ElfHandler.h"
+#include "ElfParser.h"
 
 
 void printPhdrHeader(const Elf64_Phdr& header) {
@@ -75,7 +75,7 @@ extern "C" {
     int method02();
 }
 
-void retrieveShdr(size_t shdrNum, ElfW(Shdr)* shdrs, ElfHandler& handler) {
+void retrieveShdr(size_t shdrNum, ElfW(Shdr)* shdrs, ElfParser& handler) {
     const char* strTable = handler.getSymStrTable();
     for (size_t shdrIdx = 0; shdrIdx < shdrNum; ++shdrIdx) {
         ElfW(Shdr)& shdr = shdrs[shdrIdx];
@@ -151,7 +151,7 @@ int main() {
     if( n > 0 && n < sizeof(buf)) {
         printf("process elf file: %s\n" , buf);
     }
-    ElfHandler handler(buf);
+    ElfParser handler(buf);
 
     const ElfW(Ehdr)& ehdr = handler.getEhdr(); 
 
