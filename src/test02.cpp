@@ -3,6 +3,8 @@
 #include <vector>
 #include <unistd.h>
 #include <string.h>
+#include "ElfHandler.h"
+
 
 void printPhdrHeader(const Elf64_Phdr& header) {
     printf("======== Elf64_Phdr start ========\n");
@@ -18,61 +20,9 @@ void printPhdrHeader(const Elf64_Phdr& header) {
 }
 
 using namespace std;
-int retrieveSymbolNames(struct dl_phdr_info* info, size_t info_size, void* symbol_names_vector) 
-{
-    printf("Name: %s (%d segments)\n", info->dlpi_name, info->dlpi_phnum);
-    for (size_t headerIndex = 0; headerIndex < info->dlpi_phnum; headerIndex++)
-    {
-        const ElfW(Phdr) &elfHeader = info->dlpi_phdr[headerIndex];
-        // printPhdrHeader(elfHeader);
-        printf("    => header index: %lu, type: 0x%X\n", headerIndex, elfHeader.p_type);
-        ElfW(Dyn) *elfSegment = (ElfW(Dyn)*)(info->dlpi_addr +  elfHeader.p_paddr);
-        printf("     --> segment tag: %lX\n", elfSegment->d_tag);
-
-        ElfW(Word) sym_cnt = 0;
-        char* strtab = nullptr;
-        char* sym_name = nullptr;
-        ElfW(Word) *hash = nullptr;
-        ElfW(Sym) *symbolTable = nullptr;
-
-        // size_t strSize = 1261;
-        size_t strSize = 1000;
-
-        while(elfSegment->d_tag != DT_NULL)
-        {
-            if (elfSegment->d_tag == DT_STRSZ)
-            {
-                strSize = elfSegment->d_un.d_val;
-                printf("      |--> 1 string table size: %lu\n", strSize);
-            }
-            else if (elfSegment->d_tag == DT_STRTAB)
-            {
-                printf("      |--> 2 string table size: %lu\n", strSize);
-                printf("      |-->string: ");
-                // strtab = (char*)elfSegment->d_un.d_ptr;
-                strtab = (char*)&elfHeader;
-                for (size_t index = 0; index < strSize; ++index)
-                {
-                    if (*(strtab + index) == 0)
-                    {
-                        printf(",    ");
-                    }
-                    else 
-                    {
-                        printf("%c", *(strtab + index));
-                    }
-                }
-                printf("\n");
-            }
-            elfSegment++;
-        }
-    }
-    return 1;
-}
-
 
 size_t SectionNameStrSize = 0;
-char* SectionNameStrTable = nullptr;
+const char* SectionNameStrTable = nullptr;
 
 void printStrTable(size_t strSize, char* strTable) {
     printf("======== print string table begin ========\n");
@@ -119,46 +69,57 @@ void retrievePhdr(size_t phdrNum, ElfW(Phdr)* phdrs, FILE* fp) {
     }
 }
 
-void retrieveShdr(size_t shdrNum, ElfW(Shdr)* shdrs, FILE* fp) {
-    size_t strNum = 0;
-    char* strTable = nullptr;
+extern "C" {
+    typedef void (*StubFunctiong)();
+    void method01();
+    int method02();
+}
+
+void retrieveShdr(size_t shdrNum, ElfW(Shdr)* shdrs, ElfHandler& handler) {
+    const char* strTable = handler.getSymStrTable();
     for (size_t shdrIdx = 0; shdrIdx < shdrNum; ++shdrIdx) {
         ElfW(Shdr)& shdr = shdrs[shdrIdx];
-        printf("==> header phdrIdx: %lu, type: 0x%X\n", shdrIdx, shdr.sh_type);
 
-        if (shdr.sh_type == SHT_STRTAB && strcmp(&SectionNameStrTable[shdr.sh_name], ".strtab") == 0) {
-            printf("################################ 001\n");
-            strNum = shdr.sh_size;
-            strTable = new char[strNum];
-            fseek(fp, shdr.sh_offset, SEEK_SET);
-            fread(strTable, strNum, sizeof(char), fp);
-            // printf("### string table name: %s\n", &SectionNameStrTable[shdr.sh_name]);
-            // printStrTable(strNum, strTable);
-        }
-    }
-
-    for (size_t shdrIdx = 0; shdrIdx < shdrNum; ++shdrIdx) {
-        ElfW(Shdr)& shdr = shdrs[shdrIdx];
         if (shdr.sh_type == SHT_SYMTAB) {
             printf("################################ 002\n");
             size_t symNum = shdr.sh_size / sizeof(ElfW(Sym));
-            ElfW(Sym)* syms = new ElfW(Sym)[symNum];
-            fseek(fp, shdr.sh_offset, SEEK_SET);
-            fread(syms, symNum, sizeof(ElfW(Sym)), fp);
+            const ElfW(Sym)* syms = handler.getSymbles();
+
+            size_t procBaseAddr = 0;
             for (size_t symIdx = 0; symIdx < symNum; ++symIdx) {
-                ElfW(Sym)& sym = syms[symIdx];
-                printf("======== print symbol begin ========\n");
-                printf(" name: %s\n", &strTable[sym.st_name]);
-                printf("======== print symbol end ========\n");
+                const ElfW(Sym)& sym = syms[symIdx];
+                const char type = ELF32_ST_TYPE(sym.st_info);
+                const char binding = ELF32_ST_BIND(sym.st_info);
+                
+                if (binding == STB_GLOBAL && (type == STT_FUNC || type == STT_OBJECT)) {
+                    const char* name = &strTable[sym.st_name];
+                    printf(" type: %-4d, binding: %-4d, name: %s\n", type, binding, name);
+                    if (strcmp(name, "method02") == 0) {
+                        procBaseAddr = (size_t)&method02 - sym.st_value;
+                    }
+                }
             }
 
-            delete[] syms;
-            syms = nullptr;
+            printf("======== print symbol begin ========\n");
+            for (size_t symIdx = 0; symIdx < symNum; ++symIdx) {
+                const ElfW(Sym)& sym = syms[symIdx];
+                const char type = ELF32_ST_TYPE(sym.st_info);
+                const char binding = ELF32_ST_BIND(sym.st_info);
+                
+                if (binding == STB_GLOBAL && (type == STT_FUNC || type == STT_OBJECT)) {
+                    const char* name = &strTable[sym.st_name];
+                    printf(" type: %-4d, binding: %-4d, name: %s\n", type, binding, name);
+                    if (type == STT_FUNC) {
+                        if (strcmp(name, "method02") == 0) {
+                            StubFunctiong func = (StubFunctiong)(procBaseAddr + sym.st_value);
+                            func();
+                        }
+                    }
+                }
+            }
+            printf("======== print symbol end ========\n");
         }
     }
-
-    delete[] strTable;
-    strTable = nullptr;
 }
 
 extern void method03();
@@ -166,12 +127,12 @@ extern int globalInteger;
 
 int variable01 = 0;
 
-int method01() {
+extern "C" void method01() {
     printf("=================== %s ===========\n", __FUNCTION__);
-    return 0;
+    // return 0;
 }
 
-int method02() {
+extern "C" int method02() {
     printf("=================== %s ===========\n", __FUNCTION__);
     return 0;
 }
@@ -190,43 +151,22 @@ int main() {
     if( n > 0 && n < sizeof(buf)) {
         printf("process elf file: %s\n" , buf);
     }
+    ElfHandler handler(buf);
 
-    FILE *fp = fopen(buf, "r");
-    if (!fp) {
-        printf("Failed to open file: %s\n", buf);
-        return 0;
-    }
+    const ElfW(Ehdr)& ehdr = handler.getEhdr(); 
 
-    ElfW(Ehdr) ehdr; 
-    fread(&ehdr, 1, sizeof(ehdr), fp);
-
-    // read phdrs
-    ElfW(Phdr)* phdrs = new ElfW(Phdr)[ehdr.e_phnum];
-    fseek(fp, ehdr.e_phoff, SEEK_SET);
-    fread(phdrs, ehdr.e_phnum, sizeof(ElfW(Phdr)), fp);
-
-    // read shdrs
-    ElfW(Shdr)* shdrs = new ElfW(Shdr)[ehdr.e_shnum];
-    fseek(fp, ehdr.e_shoff, SEEK_SET);
-    fread(shdrs, ehdr.e_shnum, sizeof(ElfW(Shdr)), fp);
+    const ElfW(Phdr)* phdrs = handler.getPhdrs();
+    const ElfW(Shdr)* shdrs = handler.getShdrs();
 
     // read section names string table
-    size_t strSize = shdrs[ehdr.e_shstrndx].sh_size;
-    char* strTable = new char[strSize];
-    fseek(fp, shdrs[ehdr.e_shstrndx].sh_offset, SEEK_SET);
-    fread(strTable, strSize, sizeof(char), fp);
     
-    SectionNameStrSize = strSize;
-    SectionNameStrTable = strTable;
+    SectionNameStrSize = handler.getStrTableSize();;
+    SectionNameStrTable = handler.getStrTable();
+
+    const ElfW(Ehdr)* pehdr = &ehdr;
 
     // retrievePhdr(ehdr.e_phnum, phdrs, fp);
-    retrieveShdr(ehdr.e_shnum, shdrs, fp);
+    retrieveShdr(ehdr.e_shnum, const_cast<ElfW(Shdr)*>(shdrs), handler);
     // printStrTable(strSize, strTable);
-
-    // release resource
-    delete[] strTable;
-    strTable = nullptr;
-    SectionNameStrTable = strTable;
-
     return 0;
 }
