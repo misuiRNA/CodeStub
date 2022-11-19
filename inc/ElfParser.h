@@ -21,6 +21,7 @@ public:
     const ElfW(Sym)* getSymbles() const { return symsHandler.getConst(); }
 
     size_t getStrTableSize() { return getShdrs()[ehdr.e_shstrndx].sh_size; }
+    size_t getSymSize() const;
 
 private:
     const ElfW(Shdr)& findSectionNameStrTableShdr() const;

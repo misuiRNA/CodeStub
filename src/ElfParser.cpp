@@ -53,3 +53,12 @@ const ElfW(Shdr)& ElfParser::findSymbleTableShdr() const {
 const ElfW(Shdr)& ElfParser::findSectionNameStrTableShdr() const {
     return getShdrs()[ehdr.e_shstrndx];
 }
+
+size_t ElfParser::getSymSize() const {
+    for (size_t shdrIdx = 0; shdrIdx < ehdr.e_shnum; ++shdrIdx) {
+        const ElfW(Shdr)& shdr = getShdrs()[shdrIdx];
+        if (shdr.sh_type == SHT_SYMTAB) {
+            return getShdrs()[shdrIdx].sh_size / sizeof(ElfW(Sym));
+        }
+    }
+}
