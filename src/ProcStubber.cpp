@@ -43,7 +43,7 @@ static void ProcessSymble(const char* name, const ElfHandler& handler, size_t pr
     }
 }
 
-void StubProc(ElfHandler& handler) {
+void ManualProcess(const ElfHandler& handler) {
     const char* referSymName = "__PROC_REFER_BASE_ADDRESS_SYMBLE__";
     const size_t referSymAddr = (size_t)&__PROC_REFER_BASE_ADDRESS_SYMBLE__;
     size_t procBaseAddr = CalculateProccBaseAddress(referSymName, referSymAddr, handler);
@@ -74,12 +74,13 @@ int main() {
     variable01 = 1;
     globalInteger = 5;
 
-    char buf[1024] = {0};
-    int n = readlink("/proc/self/exe", buf, sizeof(buf));
-    if( n > 0 && n < sizeof(buf)) {
-        printf("process elf file: %s\n" , buf);
+    char elfPath[1024] = {0};
+    int n = readlink("/proc/self/exe", elfPath, sizeof(elfPath));
+    if( n > 0 && n < sizeof(elfPath)) {
+        printf("process elf file: %s\n" , elfPath);
     }
-    ElfHandler handler(buf);
-    StubProc(handler);
+
+    ElfHandler handler(elfPath);
+    ManualProcess(handler);
     return 0;
 }
