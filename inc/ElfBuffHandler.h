@@ -1,3 +1,5 @@
+#include <vector>
+
 
 template<typename BuffType>
 class ElfBuffHandler {
@@ -39,10 +41,6 @@ public:
         if (shouldRelease()) {
             releae();
         }
-    }
-
-    BuffType* get() {
-        return buffArray;
     }
 
     const BuffType* getConst() const {

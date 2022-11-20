@@ -12,44 +12,35 @@ extern "C" {
 }
 
 void retrieveShdr(ElfParser& handler) {
-    const char* strTable = handler.getSymStrTable();
+    const std::map<size_t, std::string>& strTable = handler.getSymStrTable1();
     printf("################################ 002\n");
     size_t symNum = handler.getSymSize();
-    const ElfW(Sym)* syms = handler.getSymbles();
+    const std::vector<ElfW(Sym)> syms = handler.listSyms();
 
-    size_t procBaseAddr = 0;
-    for (size_t symIdx = 0; symIdx < symNum; ++symIdx) {
-        const ElfW(Sym)& sym = syms[symIdx];
-        const char type = ELF32_ST_TYPE(sym.st_info);
-        const char binding = ELF32_ST_BIND(sym.st_info);
-        
-        if (binding == STB_GLOBAL && (type == STT_FUNC || type == STT_OBJECT)) {
-            const char* name = &strTable[sym.st_name];
-            printf(" type: %-4d, binding: %-4d, name: %s\n", type, binding, name);
-            if (strcmp(name, "method02") == 0) {
-                procBaseAddr = (size_t)&method02 - sym.st_value;
-            }
-        }
+    const char* referSymName = "method02";
+    const size_t referSymAddr = (size_t)&method02;
+    const ElfW(Sym)* referSym = handler.findSym(referSymName);
+    if (referSym == nullptr) {
+        printf("not found symble named '%s'!\n", referSymName);
+        return;
     }
+    size_t procBaseAddr = referSymAddr - referSym->st_value;
 
-    printf("======== print symbol begin ========\n");
-    for (size_t symIdx = 0; symIdx < symNum; ++symIdx) {
-        const ElfW(Sym)& sym = syms[symIdx];
-        const char type = ELF32_ST_TYPE(sym.st_info);
-        const char binding = ELF32_ST_BIND(sym.st_info);
-        
-        if (binding == STB_GLOBAL && (type == STT_FUNC || type == STT_OBJECT)) {
-            const char* name = &strTable[sym.st_name];
-            printf(" type: %-4d, binding: %-4d, name: %s\n", type, binding, name);
-            if (type == STT_FUNC) {
-                if (strcmp(name, "method02") == 0) {
-                    StubFunctiong func = (StubFunctiong)(procBaseAddr + sym.st_value);
-                    func();
-                }
-            }
-        }
+
+    // const char* symName = "method01";
+    const char* symName = "variable01";
+    const ElfW(Sym)* sym = handler.findSym(symName);
+    if (sym == nullptr) {
+        printf("not found symble named '%s'!\n", symName);
+        return;
     }
-    printf("======== print symbol end ========\n");
+    const char type = ELF32_ST_TYPE(sym->st_info);
+    if (type == STT_FUNC) {
+        StubFunctiong func = (StubFunctiong)(procBaseAddr + sym->st_value);
+        func();
+    } else if (type == STT_OBJECT) {
+        printf("%s: %d\n", symName, *(int*)(procBaseAddr + sym->st_value));
+    }
 }
 
 extern void method03();
@@ -70,9 +61,6 @@ extern "C" int method02() {
 int globalCount = 0;
 
 int main() {
-    method01();
-    method02();
-    method03();
     variable01 = 1;
     globalInteger = 5;
 
