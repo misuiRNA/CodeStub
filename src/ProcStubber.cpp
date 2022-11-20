@@ -11,7 +11,22 @@ extern "C" {
     int method02();
 }
 
-void retrieveShdr(ElfParser& handler) {
+void ProcessSymble(const char* name, const ElfParser& handler, size_t procBaseAddr) {
+    const ElfW(Sym)* sym = handler.findSym(name);
+    if (sym == nullptr) {
+        printf("not found symble named '%s'!\n", name);
+        return;
+    }
+    const char symType = ELF32_ST_TYPE(sym->st_info);
+    if (symType == STT_FUNC) {
+        StubFunctiong func = (StubFunctiong)(procBaseAddr + sym->st_value);
+        func();
+    } else if (symType == STT_OBJECT) {
+        printf("%s: %d\n", name, *(int*)(procBaseAddr + sym->st_value));
+    }
+}
+
+void StubProc(ElfParser& handler) {
     const char* referSymName = "method02";
     const size_t referSymAddr = (size_t)&method02;
     const ElfW(Sym)* referSym = handler.findSym(referSymName);
@@ -21,21 +36,10 @@ void retrieveShdr(ElfParser& handler) {
     }
     size_t procBaseAddr = referSymAddr - referSym->st_value;
 
-
-    const char* symName = "method03";
-    // const char* symName = "variable01";
-    const ElfW(Sym)* sym = handler.findSym(symName);
-    if (sym == nullptr) {
-        printf("not found symble named '%s'!\n", symName);
-        return;
-    }
-    const char type = ELF32_ST_TYPE(sym->st_info);
-    if (type == STT_FUNC) {
-        StubFunctiong func = (StubFunctiong)(procBaseAddr + sym->st_value);
-        func();
-    } else if (type == STT_OBJECT) {
-        printf("%s: %d\n", symName, *(int*)(procBaseAddr + sym->st_value));
-    }
+    ProcessSymble("method03", handler, procBaseAddr);
+    ProcessSymble("variable01", handler, procBaseAddr);
+    ProcessSymble("globalInteger", handler, procBaseAddr);
+    ProcessSymble("method01", handler, procBaseAddr);
 }
 
 extern "C" void method03();
@@ -65,7 +69,6 @@ int main() {
         printf("process elf file: %s\n" , buf);
     }
     ElfParser handler(buf);
-    retrieveShdr(handler);
-    // printStrTable(strSize, strTable);
+    StubProc(handler);
     return 0;
 }
