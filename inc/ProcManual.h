@@ -3,20 +3,24 @@
 
 #include "ElfHandler.h"
 
-extern "C" typedef void (*StubFunctiong)();
+extern "C" typedef void (*StubFunctiong)(...);
 
 class ProcManual {
-    const ElfHandler& handler;
-    size_t baseAddr;
-
 public:
-    ProcManual(const ElfHandler& handler, const char* referSymName, size_t referSymAddr);
+    ProcManual(const ElfHandler& handler);
     void execSymble(const char* name) const;
     void dumpFunctions() const;
     void dumpGlobalVariables() const;
 
 private:
-    size_t parseBaseAddr(const char* referSymName, size_t referSymAddr);
+    size_t parseBaseAddr();
+
+private:
+    const ElfHandler& handler;
+    size_t baseAddr;
+
+    const static char* referSymName;
+    const static size_t referSymAddr;
 };
 
 #endif

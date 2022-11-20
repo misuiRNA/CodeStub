@@ -6,9 +6,7 @@
 #include "ElfHandler.h"
 #include "ProcManual.h"
 
-char __PROC_REFER_BASE_ADDRESS_SYMBLE__ = 0xFE;
-
-extern "C" void method03();
+extern "C" void method03(int a, int b);
 extern int globalInteger;
 
 int variable01 = 0;
@@ -33,14 +31,14 @@ int main() {
         printf("process elf file: %s\n" , elfPath);
     }
 
-    const char* referSymName = "__PROC_REFER_BASE_ADDRESS_SYMBLE__";
-    const size_t referSymAddr = (size_t)&__PROC_REFER_BASE_ADDRESS_SYMBLE__;
-
     ElfHandler handler(elfPath);
-    ProcManual manual(handler, referSymName, referSymAddr);
+    ProcManual manual(handler);
     manual.execSymble("method03");
     manual.execSymble("variable01");
     manual.execSymble("globalInteger");
     manual.execSymble("method01");
+    manual.execSymble("method01");
+    manual.execSymble("method01");
+
     return 0;
 }
