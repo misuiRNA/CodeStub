@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int method03() {
+extern "C" int method03() {
     printf("=================== %s ===========\n", __FUNCTION__);
     return 0;
 }

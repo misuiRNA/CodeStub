@@ -1,27 +1,30 @@
+#ifndef __INCLUDE_FLAGE_ELFELEMENTHOLDER__
+#define __INCLUDE_FLAGE_ELFELEMENTHOLDER__
+
 #include <vector>
 
 
-template<typename BuffType>
-class ElfBuffHandler {
-    BuffType* buffArray;
+template<typename Type>
+class ElfElementHolder {
+    Type* buffArray;
     char* count;
 
 public:
-    ElfBuffHandler() : buffArray(nullptr), count(nullptr) { }
+    ElfElementHolder() : buffArray(nullptr), count(nullptr) { }
 
-    ElfBuffHandler(FILE* fp, size_t offset, size_t num) : buffArray(new BuffType[num]), count(new char(0)) {
+    ElfElementHolder(FILE* fp, size_t offset, size_t num) : buffArray(new Type[num]), count(new char(0)) {
         fseek(fp, offset, SEEK_SET);
-        fread(buffArray, num, sizeof(BuffType), fp);
+        fread(buffArray, num, sizeof(Type), fp);
         increaseCount();
     }
 
-    ElfBuffHandler(const ElfBuffHandler& oth) {
+    ElfElementHolder(const ElfElementHolder& oth) {
         this->buffArray = oth.buffArray;
         this->count = oth.count;
         increaseCount();
     }
 
-    ElfBuffHandler& operator=(const ElfBuffHandler& oth) {
+    ElfElementHolder& operator=(const ElfElementHolder& oth) {
         if (this == &oth) {
             return *this;
         }
@@ -36,14 +39,14 @@ public:
         return *this;
     }
 
-    ~ElfBuffHandler() {
+    ~ElfElementHolder() {
         decreaseCount();
         if (shouldRelease()) {
             releae();
         }
     }
 
-    const BuffType* getConst() const {
+    const Type* get() const {
         return buffArray;
     }
 
@@ -74,3 +77,5 @@ private:
         count = nullptr;
     }
 };
+
+#endif

@@ -88,8 +88,7 @@ const ElfW(Shdr)& ElfParser::findSymbleNameStrTableShdr() const {
     for (size_t shdrIdx = 0; shdrIdx < ehdr.e_shnum; ++shdrIdx) {
         const ElfW(Shdr)& shdr = shdrs[shdrIdx];
         // TODO optimize the check condition
-        const std::map<ShOffset, std::string>& strTab = getStrTable1();
-        if (shdr.sh_type == SHT_STRTAB && strcmp(strTab.at(shdr.sh_name).c_str(), ".strtab") == 0) {
+        if (shdr.sh_type == SHT_STRTAB && strcmp(strTable.at(shdr.sh_name).c_str(), ".strtab") == 0) {
             return shdrs[shdrIdx];
         }
     }
@@ -106,13 +105,4 @@ const ElfW(Shdr)& ElfParser::findSymbleTableShdr() const {
 
 const ElfW(Shdr)& ElfParser::findSectionNameStrTableShdr() const {
     return shdrs[ehdr.e_shstrndx];
-}
-
-size_t ElfParser::getSymSize() const {
-    for (size_t shdrIdx = 0; shdrIdx < ehdr.e_shnum; ++shdrIdx) {
-        const ElfW(Shdr)& shdr = shdrs[shdrIdx];
-        if (shdr.sh_type == SHT_SYMTAB) {
-            return shdrs[shdrIdx].sh_size / sizeof(ElfW(Sym));
-        }
-    }
 }

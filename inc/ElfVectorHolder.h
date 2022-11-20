@@ -1,12 +1,15 @@
+#ifndef __INCLUDE_FLAGE_ELFVECTORHOLDER__
+#define __INCLUDE_FLAGE_ELFVECTORHOLDER__
+
 #include <vector>
 
 
 template<typename Type>
-class ElfVectorHandler {
+class ElfVectorHolder {
     std::vector<Type> entries;
 
 public:
-    ElfVectorHandler(FILE* fp, size_t offset, size_t num) {
+    ElfVectorHolder(FILE* fp, size_t offset, size_t num) {
         Type* buff = new Type[num];
         fseek(fp, offset, SEEK_SET);
         fread(buff, num, sizeof(Type), fp);
@@ -20,10 +23,12 @@ public:
         delete[] buff;
     }
 
-    ElfVectorHandler(const ElfVectorHandler& oth) = delete;
-    ElfVectorHandler& operator=(const ElfVectorHandler& oth) = delete;
+    ElfVectorHolder(const ElfVectorHolder& oth) = delete;
+    ElfVectorHolder& operator=(const ElfVectorHolder& oth) = delete;
 
     std::vector<Type> take() {
         return entries;
     }
 };
+
+#endif

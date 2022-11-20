@@ -12,11 +12,6 @@ extern "C" {
 }
 
 void retrieveShdr(ElfParser& handler) {
-    const std::map<size_t, std::string>& strTable = handler.getSymStrTable1();
-    printf("################################ 002\n");
-    size_t symNum = handler.getSymSize();
-    const std::vector<ElfW(Sym)> syms = handler.listSyms();
-
     const char* referSymName = "method02";
     const size_t referSymAddr = (size_t)&method02;
     const ElfW(Sym)* referSym = handler.findSym(referSymName);
@@ -27,8 +22,8 @@ void retrieveShdr(ElfParser& handler) {
     size_t procBaseAddr = referSymAddr - referSym->st_value;
 
 
-    // const char* symName = "method01";
-    const char* symName = "variable01";
+    const char* symName = "method03";
+    // const char* symName = "variable01";
     const ElfW(Sym)* sym = handler.findSym(symName);
     if (sym == nullptr) {
         printf("not found symble named '%s'!\n", symName);
@@ -43,7 +38,7 @@ void retrieveShdr(ElfParser& handler) {
     }
 }
 
-extern void method03();
+extern "C" void method03();
 extern int globalInteger;
 
 int variable01 = 0;
