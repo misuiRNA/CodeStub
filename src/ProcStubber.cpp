@@ -4,54 +4,13 @@
 #include <unistd.h>
 #include <string.h>
 #include "ElfHandler.h"
-
-extern "C" {
-    typedef void (*StubFunctiong)();
-    void method01();
-    int method02();
-}
-
+#include "ProcManual.h"
 
 char __PROC_REFER_BASE_ADDRESS_SYMBLE__ = 0xFE;
 
-
-static size_t CalculateProccBaseAddress(const char* referSymName, size_t referSymAddr, const ElfHandler& handler) {
-    const ElfW(Sym)* referSym = handler.findSym(referSymName);
-    if (referSym == nullptr) {
-        printf("not found symble named '%s'!\n", referSymName);
-        return (size_t)NULL;
-    }
-
-    size_t procBaseAddr = referSymAddr - referSym->st_value;
-    return procBaseAddr;
-}
-
-
-static void ProcessSymble(const char* name, const ElfHandler& handler, size_t procBaseAddr) {
-    const ElfW(Sym)* sym = handler.findSym(name);
-    if (sym == nullptr) {
-        printf("not found symble named '%s'!\n", name);
-        return;
-    }
-
-    const char symType = ELF32_ST_TYPE(sym->st_info);
-    if (symType == STT_FUNC) {
-        StubFunctiong func = (StubFunctiong)(procBaseAddr + sym->st_value);
-        func();
-    } else if (symType == STT_OBJECT) {
-        printf("%s: %d\n", name, *(int*)(procBaseAddr + sym->st_value));
-    }
-}
-
-void ManualProcess(const ElfHandler& handler) {
-    const char* referSymName = "__PROC_REFER_BASE_ADDRESS_SYMBLE__";
-    const size_t referSymAddr = (size_t)&__PROC_REFER_BASE_ADDRESS_SYMBLE__;
-    size_t procBaseAddr = CalculateProccBaseAddress(referSymName, referSymAddr, handler);
-
-    ProcessSymble("method03", handler, procBaseAddr);
-    ProcessSymble("variable01", handler, procBaseAddr);
-    ProcessSymble("globalInteger", handler, procBaseAddr);
-    ProcessSymble("method01", handler, procBaseAddr);
+extern "C" {
+    void method01();
+    int method02();
 }
 
 extern "C" void method03();
@@ -80,7 +39,14 @@ int main() {
         printf("process elf file: %s\n" , elfPath);
     }
 
+    const char* referSymName = "__PROC_REFER_BASE_ADDRESS_SYMBLE__";
+    const size_t referSymAddr = (size_t)&__PROC_REFER_BASE_ADDRESS_SYMBLE__;
+
     ElfHandler handler(elfPath);
-    ManualProcess(handler);
+    ProcManual manual(handler, referSymName, referSymAddr);
+    manual.execSymble("method03");
+    manual.execSymble("variable01");
+    manual.execSymble("globalInteger");
+    manual.execSymble("method01");
     return 0;
 }
