@@ -11,6 +11,20 @@ class ElfHandler {
     using ShOffset = size_t;
     using string = std::string;
 
+public:
+    ElfHandler(const char* fileName);
+    const ElfW(Ehdr)& getEhdr() const { return ehdr; }
+    const std::vector<ElfW(Phdr)>& listPhdrs() const { return phdrs; }
+    const std::vector<ElfW(Shdr)>& listShdrs() const { return shdrs; }
+    const std::vector<ElfW(Sym)>& listSyms() const { return syms; }
+    const ElfW(Sym)* findSym(const string& name) const;
+
+private:
+    const ElfW(Shdr)& findSectionNameStrTableShdr() const;
+    const ElfW(Shdr)& findSymbleNameStrTableShdr() const;
+    const ElfW(Shdr)& findSymbleTableShdr() const;
+
+private:
     ElfW(Ehdr) ehdr;
     std::vector<ElfW(Phdr)> phdrs;
     std::vector<ElfW(Shdr)> shdrs;
@@ -18,20 +32,9 @@ class ElfHandler {
     
     std::map<ShOffset, std::string> strTable;
     std::map<ShOffset, std::string> symStrTable;
-
-public:
-    ElfHandler(const char* fileName);
-    const ElfW(Ehdr)& getEhdr() const { return ehdr; }
-    const std::vector<ElfW(Phdr)>& listPhdrs() const { return phdrs; }
-    const std::vector<ElfW(Shdr)>& listShdrs() const { return shdrs; }
-    const std::vector<ElfW(Sym)>& listSyms() const { return syms; }
-
-    const ElfW(Sym)* findSym(const string& name) const;
-
-private:
-    const ElfW(Shdr)& findSectionNameStrTableShdr() const;
-    const ElfW(Shdr)& findSymbleNameStrTableShdr() const;
-    const ElfW(Shdr)& findSymbleTableShdr() const;
 };
+
+void DumpPhdrHeader(const Elf64_Phdr& header);
+void DumpStrTable(size_t strSize, char* strTable);
 
 #endif
