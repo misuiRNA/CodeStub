@@ -11,12 +11,29 @@ extern "C" {
     int method02();
 }
 
-void ProcessSymble(const char* name, const ElfHandler& handler, size_t procBaseAddr) {
+
+char __PROC_REFER_BASE_ADDRESS_SYMBLE__ = 0xFE;
+
+
+static size_t CalculateProccBaseAddress(const char* referSymName, size_t referSymAddr, const ElfHandler& handler) {
+    const ElfW(Sym)* referSym = handler.findSym(referSymName);
+    if (referSym == nullptr) {
+        printf("not found symble named '%s'!\n", referSymName);
+        return (size_t)NULL;
+    }
+
+    size_t procBaseAddr = referSymAddr - referSym->st_value;
+    return procBaseAddr;
+}
+
+
+static void ProcessSymble(const char* name, const ElfHandler& handler, size_t procBaseAddr) {
     const ElfW(Sym)* sym = handler.findSym(name);
     if (sym == nullptr) {
         printf("not found symble named '%s'!\n", name);
         return;
     }
+
     const char symType = ELF32_ST_TYPE(sym->st_info);
     if (symType == STT_FUNC) {
         StubFunctiong func = (StubFunctiong)(procBaseAddr + sym->st_value);
@@ -27,14 +44,9 @@ void ProcessSymble(const char* name, const ElfHandler& handler, size_t procBaseA
 }
 
 void StubProc(ElfHandler& handler) {
-    const char* referSymName = "method02";
-    const size_t referSymAddr = (size_t)&method02;
-    const ElfW(Sym)* referSym = handler.findSym(referSymName);
-    if (referSym == nullptr) {
-        printf("not found symble named '%s'!\n", referSymName);
-        return;
-    }
-    size_t procBaseAddr = referSymAddr - referSym->st_value;
+    const char* referSymName = "__PROC_REFER_BASE_ADDRESS_SYMBLE__";
+    const size_t referSymAddr = (size_t)&__PROC_REFER_BASE_ADDRESS_SYMBLE__;
+    size_t procBaseAddr = CalculateProccBaseAddress(referSymName, referSymAddr, handler);
 
     ProcessSymble("method03", handler, procBaseAddr);
     ProcessSymble("variable01", handler, procBaseAddr);
@@ -48,12 +60,11 @@ extern int globalInteger;
 int variable01 = 0;
 
 extern "C" void method01() {
-    printf("=================== %s ===========\n", __FUNCTION__);
-    // return 0;
+    printf("======> call method '%s'\n", __FUNCTION__);
 }
 
 extern "C" int method02() {
-    printf("=================== %s ===========\n", __FUNCTION__);
+    printf("======> call method '%s'\n", __FUNCTION__);
     return 0;
 }
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 extern "C" int method03() {
-    printf("=================== %s ===========\n", __FUNCTION__);
+    printf("##################### call method %s\n", __FUNCTION__);
     return 0;
 }
 
