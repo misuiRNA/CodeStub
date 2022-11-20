@@ -7,7 +7,7 @@
 #include <string>
 #include <map>
 
-class ElfParser {
+class ElfHandler {
     using ShOffset = size_t;
     using string = std::string;
 
@@ -20,7 +20,7 @@ class ElfParser {
     std::map<ShOffset, std::string> symStrTable;
 
 public:
-    ElfParser(const char* fileName);
+    ElfHandler(const char* fileName);
     const ElfW(Ehdr)& getEhdr() const { return ehdr; }
     const std::vector<ElfW(Phdr)>& listPhdrs() const { return phdrs; }
     const std::vector<ElfW(Shdr)>& listShdrs() const { return shdrs; }

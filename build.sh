@@ -1,4 +1,4 @@
-g++ src/ProcStubber.cpp src/extrern_test.cpp src/ElfParser.cpp \
+g++ src/ProcStubber.cpp src/extrern_test.cpp src/ElfHandler.cpp \
   -Iinc \
   -O0 \
   -o test.exe

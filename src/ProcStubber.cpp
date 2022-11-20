@@ -3,7 +3,7 @@
 #include <vector>
 #include <unistd.h>
 #include <string.h>
-#include "ElfParser.h"
+#include "ElfHandler.h"
 
 extern "C" {
     typedef void (*StubFunctiong)();
@@ -11,7 +11,7 @@ extern "C" {
     int method02();
 }
 
-void ProcessSymble(const char* name, const ElfParser& handler, size_t procBaseAddr) {
+void ProcessSymble(const char* name, const ElfHandler& handler, size_t procBaseAddr) {
     const ElfW(Sym)* sym = handler.findSym(name);
     if (sym == nullptr) {
         printf("not found symble named '%s'!\n", name);
@@ -26,7 +26,7 @@ void ProcessSymble(const char* name, const ElfParser& handler, size_t procBaseAd
     }
 }
 
-void StubProc(ElfParser& handler) {
+void StubProc(ElfHandler& handler) {
     const char* referSymName = "method02";
     const size_t referSymAddr = (size_t)&method02;
     const ElfW(Sym)* referSym = handler.findSym(referSymName);
@@ -68,7 +68,7 @@ int main() {
     if( n > 0 && n < sizeof(buf)) {
         printf("process elf file: %s\n" , buf);
     }
-    ElfParser handler(buf);
+    ElfHandler handler(buf);
     StubProc(handler);
     return 0;
 }

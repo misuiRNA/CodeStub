@@ -1,4 +1,4 @@
-#include "ElfParser.h"
+#include "ElfHandler.h"
 #include <string.h>
 
 static ElfW(Ehdr) ParseEhdr(FILE* fp) {
@@ -42,7 +42,7 @@ static std::map<ShOffset, std::string> parseStrTable(FILE* fp, size_t offset, si
     return strTable;
 }
 
-ElfParser::ElfParser(const char* fileName) {
+ElfHandler::ElfHandler(const char* fileName) {
     /**
      * TODO 在函数外面访问fp为什么会跑挂？和fopen的机制有关？
      * fopen 的内存是在堆上还是栈上？或者不同的实现中内存分配不一样？
@@ -66,7 +66,7 @@ ElfParser::ElfParser(const char* fileName) {
     syms = Parse<ElfW(Sym)>(fp, symTableShdr.sh_offset, symTableShdr.sh_size / sizeof(ElfW(Sym)));
 }
 
-const ElfW(Sym)* ElfParser::findSym(const string& name) const {
+const ElfW(Sym)* ElfHandler::findSym(const string& name) const {
     for (auto& sym : syms) {
         const char type = ELF32_ST_TYPE(sym.st_info);
         const char binding = ELF32_ST_BIND(sym.st_info);
@@ -84,7 +84,7 @@ const ElfW(Sym)* ElfParser::findSym(const string& name) const {
     return nullptr;
 }
 
-const ElfW(Shdr)& ElfParser::findSymbleNameStrTableShdr() const {
+const ElfW(Shdr)& ElfHandler::findSymbleNameStrTableShdr() const {
     for (size_t shdrIdx = 0; shdrIdx < ehdr.e_shnum; ++shdrIdx) {
         const ElfW(Shdr)& shdr = shdrs[shdrIdx];
         // TODO optimize the check condition
@@ -94,7 +94,7 @@ const ElfW(Shdr)& ElfParser::findSymbleNameStrTableShdr() const {
     }
 }
 
-const ElfW(Shdr)& ElfParser::findSymbleTableShdr() const {
+const ElfW(Shdr)& ElfHandler::findSymbleTableShdr() const {
     for (size_t shdrIdx = 0; shdrIdx < ehdr.e_shnum; ++shdrIdx) {
         const ElfW(Shdr)& shdr = shdrs[shdrIdx];
         if (shdr.sh_type == SHT_SYMTAB) {
@@ -103,6 +103,6 @@ const ElfW(Shdr)& ElfParser::findSymbleTableShdr() const {
     }
 }
 
-const ElfW(Shdr)& ElfParser::findSectionNameStrTableShdr() const {
+const ElfW(Shdr)& ElfHandler::findSectionNameStrTableShdr() const {
     return shdrs[ehdr.e_shstrndx];
 }
