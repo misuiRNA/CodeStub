@@ -3,6 +3,7 @@
 #include <vector>
 #include <unistd.h>
 #include <string.h>
+#include <iostream>
 #include "ElfHandler.h"
 #include "ProcManual.h"
 
@@ -21,7 +22,25 @@ extern "C" int method02() {
     return 0;
 }
 
+const char* ReadLine() {
+    const static size_t INPUT_BUFF_SIZE = 64;
+    char static inputBuff[INPUT_BUFF_SIZE] = { 0 };
+    printf("misui> ");
+    std::cin.getline(inputBuff, INPUT_BUFF_SIZE);    // scanf("%s", s);
+}
+
 int main() {
+    printf("please enter commands...\n");
+
+    while (true)
+    {
+        const char* input = ReadLine();
+        printf("%s", input);
+        printf("\n");
+    }
+    
+
+
     variable01 = 1;
     globalInteger = 5;
 
