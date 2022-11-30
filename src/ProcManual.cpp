@@ -1,4 +1,5 @@
 #include "ProcManual.h"
+#include <unistd.h>
 
 char __PROC_REFER_BASE_ADDRESS_SYMBLE__ = 0xFE;
 
@@ -50,4 +51,16 @@ size_t ProcManual::parseBaseAddr() {
 
     size_t addr = referSymAddr - referSym->st_value;
     return addr;
+}
+
+
+ProcManual CreateProcManual() {
+    char elfPath[1024] = {0};
+    int n = readlink("/proc/self/exe", elfPath, sizeof(elfPath));
+    if( n > 0 && n < sizeof(elfPath)) {
+        printf("process elf file: %s\n" , elfPath);
+    }
+    static ElfHandler handler(elfPath);    // TODO optimize
+    // ProcManual manual(handler);
+    return handler;
 }

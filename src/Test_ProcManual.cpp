@@ -22,42 +22,31 @@ extern "C" int method02() {
     return 0;
 }
 
-const char* ReadLine() {
+std::string ReadLine() {
     const static size_t INPUT_BUFF_SIZE = 64;
     char static inputBuff[INPUT_BUFF_SIZE] = { 0 };
-    printf("misui> ");
+    printf("ms:> ");
     std::cin.getline(inputBuff, INPUT_BUFF_SIZE);    // scanf("%s", s);
+    return std::string(inputBuff);
+}
+
+void ExecCommand(const std::string& command) {
+    const static ProcManual manual = CreateProcManual();
+    printf("%s\n", command.c_str());
+    manual.execSymble(command.c_str());
 }
 
 int main() {
-    printf("please enter commands...\n");
-
     while (true)
     {
-        const char* input = ReadLine();
-        printf("%s", input);
-        printf("\n");
+        std::string input = ReadLine();
+
+        if (input == "exit") {
+            printf("exited!!!\n");
+            break;
+        }
+
+        ExecCommand(input);
     }
-    
-
-
-    variable01 = 1;
-    globalInteger = 5;
-
-    char elfPath[1024] = {0};
-    int n = readlink("/proc/self/exe", elfPath, sizeof(elfPath));
-    if( n > 0 && n < sizeof(elfPath)) {
-        printf("process elf file: %s\n" , elfPath);
-    }
-
-    ElfHandler handler(elfPath);
-    ProcManual manual(handler);
-    manual.execSymble("method03");
-    manual.execSymble("variable01");
-    manual.execSymble("globalInteger");
-    manual.execSymble("method01");
-    manual.execSymble("method01");
-    manual.execSymble("method01");
-
     return 0;
 }
