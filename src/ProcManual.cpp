@@ -20,7 +20,7 @@ void ProcManual::execSymble(const char* name) const {
         return;
     }
 
-    const char symType = ELF32_ST_TYPE(sym->st_info);
+    const char symType = ELF64_ST_TYPE(sym->st_info);
     if (symType == STT_FUNC) {
         StubFunctiong func = (StubFunctiong)(baseAddr + sym->st_value);
         // TODO 把外部传入的参数作为入参
@@ -32,13 +32,37 @@ void ProcManual::execSymble(const char* name) const {
 
 void ProcManual::dumpFunctions() const {
     printf("################ print functions start ################\n");
-    // TODO do print function symbles
+    printf(" - %-13s | %-13s | %-16s | %s\n", "bind", "type", "addr", "name");
+    const std::vector<ElfW(Sym)>& symList = handler.listSyms();
+    for (auto sym : symList) {
+        const unsigned char symType = ELF64_ST_TYPE(sym.st_info);
+        const unsigned char binding = ELF64_ST_BIND(sym.st_info);
+        if (symType != STT_FUNC || binding != STB_GLOBAL) {
+            continue;
+        }
+        const std::string& symName = handler.getSymName(sym);
+        const std::string& symBindStr = handler.getSymBindStr(sym);
+        const std::string& symTypeStr = handler.getSymTypeStr(sym);
+        printf(" - %-13s | %-13s | 0x%-16lx | %s\n", symBindStr.c_str(), symTypeStr.c_str(), sym.st_value, symName.c_str());
+    }
     printf("################ print functions end ################\n");
 }
 
 void ProcManual::dumpGlobalVariables() const {
     printf("################ print variables start ################\n");
-    // TODO do print variable symbles
+    printf(" - %-13s | %-13s | %-16s | %s\n", "bind", "type", "addr", "name");
+    const std::vector<ElfW(Sym)>& symList = handler.listSyms();
+    for (auto sym : symList) {
+        const unsigned char symType = ELF64_ST_TYPE(sym.st_info);
+        const unsigned char binding = ELF64_ST_BIND(sym.st_info);
+        if (symType != STT_OBJECT || binding != STB_GLOBAL) {
+            continue;
+        }
+        const std::string& symName = handler.getSymName(sym);
+        const std::string& symBindStr = handler.getSymBindStr(sym);
+        const std::string& symTypeStr = handler.getSymTypeStr(sym);
+        printf(" - %-13s | %-13s | 0x%-16lx | %s\n", symBindStr.c_str(), symTypeStr.c_str(), sym.st_value, symName.c_str());
+    }
     printf("################ print variables end ################\n");
 }
 
@@ -54,7 +78,7 @@ size_t ProcManual::parseBaseAddr() {
 }
 
 
-ProcManual CreateProcManual() {
+ProcManual GetProcManualInstance() {
     char elfPath[1024] = {0};
     int n = readlink("/proc/self/exe", elfPath, sizeof(elfPath));
     if( n > 0 && n < sizeof(elfPath)) {

@@ -23,6 +23,6 @@ private:
     const static size_t referSymAddr;
 };
 
-ProcManual CreateProcManual();
+ProcManual GetProcManualInstance();
 
 #endif

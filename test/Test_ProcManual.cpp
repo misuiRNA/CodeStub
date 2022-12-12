@@ -6,6 +6,7 @@
 #include <iostream>
 #include "ElfHandler.h"
 #include "ProcManual.h"
+#include "IOHandler.h"
 
 extern "C" void method03(int a, int b);
 extern int globalInteger;
@@ -22,21 +23,8 @@ extern "C" int method02() {
     return 0;
 }
 
-std::string ReadLine() {
-    const static size_t INPUT_BUFF_SIZE = 64;
-    char static inputBuff[INPUT_BUFF_SIZE] = { 0 };
-    printf("ms:> ");
-    std::cin.getline(inputBuff, INPUT_BUFF_SIZE);    // scanf("%s", s);
-    return std::string(inputBuff);
-}
-
-void ExecCommand(const std::string& command) {
-    const static ProcManual manual = CreateProcManual();
-    printf("%s\n", command.c_str());
-    manual.execSymble(command.c_str());
-}
-
 int main() {
+    const static ProcManual manual = GetProcManualInstance();
     while (true)
     {
         std::string input = ReadLine();
@@ -46,7 +34,12 @@ int main() {
             break;
         }
 
-        ExecCommand(input);
+        if (input == "showSymbles") {
+            manual.dumpFunctions();
+            manual.dumpGlobalVariables();
+        } else {
+            manual.execSymble(input.c_str());
+        }
     }
     return 0;
 }

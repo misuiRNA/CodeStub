@@ -18,6 +18,9 @@ public:
     const std::vector<ElfW(Shdr)>& listShdrs() const { return shdrs; }
     const std::vector<ElfW(Sym)>& listSyms() const { return syms; }
     const ElfW(Sym)* findSym(const string& name) const;
+    const std::string& getSymName(const ElfW(Sym)& sym) const;
+    const std::string& getSymBindStr(const ElfW(Sym)& sym) const;
+    const std::string& getSymTypeStr(const ElfW(Sym)& sym) const;
 
 private:
     const ElfW(Shdr)& findSectionNameStrTableShdr() const;
@@ -33,8 +36,5 @@ private:
     std::map<ShOffset, std::string> strTable;
     std::map<ShOffset, std::string> symStrTable;
 };
-
-void DumpPhdrHeader(const Elf64_Phdr& header);
-void DumpStrTable(size_t strSize, char* strTable);
 
 #endif

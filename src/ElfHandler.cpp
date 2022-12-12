@@ -84,6 +84,60 @@ const ElfW(Sym)* ElfHandler::findSym(const string& name) const {
     return nullptr;
 }
 
+const std::string& ElfHandler::getSymName(const ElfW(Sym)& sym) const {
+    static const std::string INVALID = "invalid";
+    if (symStrTable.find(sym.st_name) != symStrTable.end()) {
+        return symStrTable.at(sym.st_name);
+    }
+    return INVALID;
+}
+
+const std::string& ElfHandler::getSymBindStr(const ElfW(Sym)& sym) const {
+    static const std::map<unsigned char, std::string> SYM_BIND_MAP = {
+        {STB_LOCAL,      "STB_LOCAL"},
+        {STB_GLOBAL,     "STB_GLOBAL"},
+        {STB_WEAK,       "STB_WEAK"},
+        {STB_NUM,        "STB_NUM"},
+        {STB_LOOS,       "STB_LOOS"},
+        {STB_GNU_UNIQUE, "STB_GNU_UNIQUE"},
+        {STB_HIOS,       "STB_HIOS"},
+        {STB_LOPROC,     "STB_LOPROC"},
+        {STB_HIPROC,     "STB_HIPROC"},
+    };
+    static const std::string INVALID = "invalid";
+
+    const unsigned char binding = ELF64_ST_BIND(sym.st_info);
+    if (SYM_BIND_MAP.find(binding) != SYM_BIND_MAP.end()) {
+        return SYM_BIND_MAP.at(binding);
+    }
+    return INVALID;
+}
+
+const std::string& ElfHandler::getSymTypeStr(const ElfW(Sym)& sym) const {
+    static const std::map<unsigned char, std::string> SYM_TYPE_MAP = {
+        {STT_NOTYPE,    "STT_NOTYPE"},
+        {STT_OBJECT,    "STT_OBJECT"},
+        {STT_FUNC,      "STT_FUNC"},
+        {STT_SECTION,   "STT_SECTION"},
+        {STT_FILE,      "STT_FILE"},
+        {STT_COMMON,    "STT_COMMON"},
+        {STT_TLS,       "STT_TLS"},
+        {STT_NUM,       "STT_NUM"},
+        {STT_LOOS,      "STT_LOOS"},
+        {STT_GNU_IFUNC, "STT_GNU_IFUNC"},
+        {STT_HIOS,      "STT_HIOS"},
+        {STT_LOPROC,    "STT_LOPROC"},
+        {STT_HIPROC,    "STT_HIPROC"},
+    };
+    static const std::string INVALID = "invalid";
+
+    const unsigned char symType = ELF64_ST_TYPE(sym.st_info);
+    if (SYM_TYPE_MAP.find(symType) != SYM_TYPE_MAP.end()) {
+        return SYM_TYPE_MAP.at(symType);
+    }
+    return INVALID;
+}
+
 const ElfW(Shdr)& ElfHandler::findSymbleNameStrTableShdr() const {
     for (size_t shdrIdx = 0; shdrIdx < ehdr.e_shnum; ++shdrIdx) {
         const ElfW(Shdr)& shdr = shdrs[shdrIdx];
@@ -106,34 +160,3 @@ const ElfW(Shdr)& ElfHandler::findSymbleTableShdr() const {
 const ElfW(Shdr)& ElfHandler::findSectionNameStrTableShdr() const {
     return shdrs[ehdr.e_shstrndx];
 }
-
-
-void DumpPhdrHeader(const Elf64_Phdr& header) {
-    printf("======== Elf64_Phdr start ========\n");
-    printf("    |- p_type   = %d\n", header.p_type);
-    printf("    |- p_flags  = %d\n", header.p_flags);
-    printf("    |- p_offset = %lu\n", header.p_offset);
-    printf("    |- p_vaddr  = %p\n", (void*)header.p_vaddr);
-    printf("    |- p_paddr  = %p\n", (void*)header.p_paddr);
-    printf("    |- p_filesz = %lu\n", header.p_filesz);
-    printf("    |- p_memsz  = %lu\n", header.p_memsz);
-    printf("    |- p_align  = %lu\n", header.p_align);
-    printf("======== Elf64_Phdr end ========\n");
-}
-
-void DumpStrTable(size_t strSize, char* strTable) {
-    printf("======== print string table begin ========\n");
-    printf(" string size: %lu\n", strSize);
-    printf(" string  addr: %p\n", strTable);
-    printf(" string items: ");
-    for (size_t strIdx = 0; strIdx < strSize; ++strIdx) {
-        if (*(strTable + strIdx) == 0) {
-            printf("\n  --> ");
-        } else {
-            printf("%c", *(strTable + strIdx));
-        }
-    }
-    printf("\n");
-    printf("======== print string table end ========\n");
-}
-
