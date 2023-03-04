@@ -1,5 +1,6 @@
 #include "ProcManual.h"
 #include <unistd.h>
+#include "FunctionInvoker.h"
 
 char __PROC_REFER_BASE_ADDRESS_SYMBLE__ = 0xFE;
 
@@ -13,7 +14,7 @@ ProcManual::ProcManual(const ElfHandler& handler)
     baseAddr = parseBaseAddr();
 }
 
-void ProcManual::execSymble(const char* name) const {
+void ProcManual::execSymble(const char* name, const std::vector<int>& args) const {
     const ElfW(Sym)* sym = handler.findSym(name);
     if (sym == nullptr) {
         printf("not found symble named '%s'!\n", name);
@@ -22,9 +23,8 @@ void ProcManual::execSymble(const char* name) const {
 
     const char symType = ELF64_ST_TYPE(sym->st_info);
     if (symType == STT_FUNC) {
-        StubFunctiong func = (StubFunctiong)(baseAddr + sym->st_value);
-        // TODO 把外部传入的参数作为入参
-        func(0xFF, 1);
+        void* funcPtr = (void*)(baseAddr + sym->st_value);
+        incokeFunction(funcPtr, args);
     } else if (symType == STT_OBJECT) {
         printf("%s: %d\n", name, *(int*)(baseAddr + sym->st_value));
     }
@@ -76,7 +76,6 @@ size_t ProcManual::parseBaseAddr() {
     size_t addr = referSymAddr - referSym->st_value;
     return addr;
 }
-
 
 ProcManual GetProcManualInstance() {
     char elfPath[1024] = {0};

@@ -23,6 +23,11 @@ extern "C" int method02() {
     return 0;
 }
 
+extern "C" int method04(int arg1, int arg2) {
+    printf("======> call method '%s', args: %d, %d\n", __FUNCTION__, arg1, arg2);
+    return 0;
+}
+
 int main() {
     const static ProcManual manual = GetProcManualInstance();
     while (true)
@@ -38,7 +43,8 @@ int main() {
             manual.dumpFunctions();
             manual.dumpGlobalVariables();
         } else {
-            manual.execSymble(input.c_str());
+            ManualCommand command = ManualCommand::ParseCommand(input.c_str());
+            manual.execSymble(command.name, command.args);
         }
     }
     return 0;

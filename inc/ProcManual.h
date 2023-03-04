@@ -1,14 +1,13 @@
 #ifndef __INCLUDE_FLAGE_PROCMANUAL__
 #define __INCLUDE_FLAGE_PROCMANUAL__
 
+#include <vector>
 #include "ElfHandler.h"
-
-extern "C" typedef void (*StubFunctiong)(...);
 
 class ProcManual {
 public:
     ProcManual(const ElfHandler& handler);
-    void execSymble(const char* name) const;
+    void execSymble(const char* name, const std::vector<int>& args) const;
     void dumpFunctions() const;
     void dumpGlobalVariables() const;
 
