@@ -6,7 +6,7 @@
 #include <iostream>
 #include "ElfHandler.h"
 #include "ProcManual.h"
-#include "IOHandler.h"
+#include "TerminalHandler.h"
 
 extern "C" void method03(int a, int b);
 extern int globalInteger;
@@ -43,7 +43,7 @@ int main() {
             manual.dumpFunctions();
             manual.dumpGlobalVariables();
         } else {
-            ManualCommand command = ManualCommand::ParseCommand(input.c_str());
+            TerminalCommand command = TerminalCommand::ParseCommand(input.c_str());
             manual.execSymble(command.name, command.args);
         }
     }

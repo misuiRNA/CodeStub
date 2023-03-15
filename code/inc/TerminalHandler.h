@@ -6,11 +6,11 @@
 
 std::string ReadLine();
 
-struct ManualCommand {
+struct TerminalCommand {
     const char* name;
     std::vector<int> args;
 
-    static ManualCommand ParseCommand(const char* input);
+    static TerminalCommand ParseCommand(const char* input);
 };
 
 #endif

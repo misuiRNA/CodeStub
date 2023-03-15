@@ -1,4 +1,4 @@
-#include "IOHandler.h"
+#include "TerminalHandler.h"
 #include <iostream>
 #include <algorithm>
 #include <sstream>
@@ -21,7 +21,7 @@ static std::vector<std::string> splitString(const std::string& s, char delimiter
     return tokens;
 }
 
-ManualCommand ManualCommand::ParseCommand(const char* input) {
+TerminalCommand TerminalCommand::ParseCommand(const char* input) {
     std::string inputStr(input);
     inputStr.erase(std::remove_if(inputStr.begin(), inputStr.end(), [](unsigned char c) {
         return std::isspace(c);
