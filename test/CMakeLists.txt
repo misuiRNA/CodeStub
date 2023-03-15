@@ -3,7 +3,7 @@ project(code_test)
 
 # GoogleTest requires at least C++11
 set(CMAKE_CXX_STANDARD 11)
-set(CODE_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
+set(CODE_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../code)
 
 include(FetchContent)
 FetchContent_Declare(

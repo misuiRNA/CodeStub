@@ -1,6 +1,10 @@
-g++ src/ElfHandler.cpp src/ProcManual.cpp src/IOHandler.cpp src/FunctionInvoker.cpp\
-    test/Test_ProcManual.cpp test/Test_ExternSym.cpp  \
+g++ code/src/ElfHandler.cpp \
+    code/src/ProcManual.cpp \
+    code/src/IOHandler.cpp \
+    code/src/FunctionInvoker.cpp\
+    test/Test_ProcManual.cpp \
+    test/Test_ExternSym.cpp  \
     -std=c++11 \
-    -Iinc \
+    -Icode/inc \
     -O0 \
     -o test.exe
