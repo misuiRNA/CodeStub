@@ -19,7 +19,7 @@ include_directories(
 
 file(GLOB SRC_DIR
     ${CODE_ROOT_DIR}/src/*.cpp
-    test_cast/FunctionInvokerTest.cpp
+    test_cast/*Test.cpp
 )
 
 add_executable(code_test ${SRC_DIR})
