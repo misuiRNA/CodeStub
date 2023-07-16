@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include <unistd.h>
-#include <string.h>
 #include <iostream>
 #include "ElfHandler.h"
 #include "ProcManual.h"
